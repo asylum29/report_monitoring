@@ -56,7 +56,13 @@ function report_monitoring_get_count_course_participants($courseid) {
 }
 
 function report_monitoring_get_assign_grades_data($modinfo, $activitygroup, $onlyvisible = false) {
-    global $DB;
+    global $DB, $CFG;
+
+    $report_plugins = core_component::get_plugin_list('report');
+    $report_activity_installed = isset($report_plugins['activity']);
+    if ($report_activity_installed) {
+        require_once($CFG->dirroot.'/report/activity/locallib.php');
+    }
 
     $modules = $modinfo->get_instances_of('assign');
     $course = $modinfo->get_course();
@@ -65,7 +71,9 @@ function report_monitoring_get_assign_grades_data($modinfo, $activitygroup, $onl
 
     foreach ($modules as $module) {
 
-        if ($onlyvisible && !$module->visible) continue;
+        $visible = $module->visible;
+        if ($report_activity_installed) $visible = report_activity_get_modvisible($module);
+        if ($onlyvisible && !$visible) continue;
         $cm = context_module::instance($module->id);
         $assign = new assign($cm, $module, $course);
         $instance = $assign->get_instance();
@@ -116,15 +124,23 @@ function report_monitoring_get_assign_grades_data($modinfo, $activitygroup, $onl
 }
 
 function report_monitoring_get_quiz_grades_data($modinfo, $activitygroup, $onlyvisible = false) {
-    global $DB;
+    global $DB, $CFG;
 
+    $report_plugins = core_component::get_plugin_list('report');
+    $report_activity_installed = isset($report_plugins['activity']);
+    if ($report_activity_installed) {
+        require_once($CFG->dirroot.'/report/activity/locallib.php');
+    }
+    
     $modules = $modinfo->get_instances_of('quiz');
 
     $result = array();
 
     foreach ($modules as $module) {
 
-        if ($onlyvisible && !$module->visible) continue;
+        $visible = $module->visible;
+        if ($report_activity_installed) $visible = report_activity_get_modvisible($module);
+        if ($onlyvisible && !$visible) continue;
         $cm = context_module::instance($module->id);
         $moddata = new stdClass();
         

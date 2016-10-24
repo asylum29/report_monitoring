@@ -17,7 +17,7 @@ class report_monitoring_renderer extends plugin_renderer_base {
             );
             foreach ($coursesdata as $coursedata) {
             
-                $coursestats = $this->get_course_stats($coursedata); // получаем заранее для отображения (или нет) кнопки "развернуть"
+                list($completeness, $coursestats) = $this->get_course_stats($coursedata); // получаем заранее для отображения (или нет) кнопки "развернуть"
             
                 /**************************************/
                 /* Основные сведения о работе в курсе */
@@ -70,7 +70,8 @@ class report_monitoring_renderer extends plugin_renderer_base {
                 $class = count($notices) > 0 ? 'report_monitoring_red' : 'report_monitoring_green'; // проверка наличия замечаний по курсу
                 if (count($notices) == 0) {
                     $notices[] = get_string('key8', 'report_monitoring');
-                }             
+                }
+                $notices[] = html_writer::start_tag('b') . get_string('key23', 'report_monitoring', $completeness) . html_writer::end_tag('b');
                 $cells[] = report_monitoring_table::create_cell(html_writer::alist($notices));
                 
                 $content = $coursestats ? html_writer::div('', 'report_monitoring_showmore') : '';
@@ -97,9 +98,13 @@ class report_monitoring_renderer extends plugin_renderer_base {
                 $table->data[] = $row;
             
             }
+            
             return html_writer::table($table);
+            
         } else {
+        
             return $OUTPUT->heading(get_string('key22', 'report_monitoring'), 3);
+            
         }
     }
     
@@ -108,7 +113,9 @@ class report_monitoring_renderer extends plugin_renderer_base {
     
         if (count($coursedata->assigns) > 0 || count($coursedata->quiz) > 0) {
         
-            $statshtml = '';
+            $statshtml = '';       
+            $assignstotal = array('countusers' => 0, 'countgrades' => 0);
+            $quizestotal = array('countusers'  => 0, 'countgrades' => 0);
             
             if (count($coursedata->assigns) > 0) {
                 $table = report_monitoring_table::create_table('generaltable report_monitoring_coursetable');
@@ -118,7 +125,7 @@ class report_monitoring_renderer extends plugin_renderer_base {
                     get_string('key13', 'report_monitoring'),
                     get_string('key14', 'report_monitoring'),
                 );
-                $assignstotal = array('participants' => 0, 'submitted' => 0, 'graded' => 0);
+                $assignscalc = array('participants' => 0, 'submitted' => 0, 'graded' => 0);
                 foreach ($coursedata->assigns as $modid => $assign) {
                     $cells = array();
                     
@@ -138,14 +145,15 @@ class report_monitoring_renderer extends plugin_renderer_base {
                     $value = '—';
                     if (!$assign->teamsubmission) {
                         $value = $assign->participants;
-                        $assignstotal['participants'] += $value;
+                        $assignscalc['participants'] += $value;
+                        $assignstotal['countusers'] += $value;
                     }
                     $cells[] = report_monitoring_table::create_cell($value);
                     
                     $value = '—';
                     if (!$assign->teamsubmission) {
                         $value = $assign->submitted;
-                        $assignstotal['submitted'] += $value;
+                        $assignscalc['submitted'] += $value;
                     }
                     $cells[] = report_monitoring_table::create_cell($value);
                     
@@ -155,18 +163,22 @@ class report_monitoring_renderer extends plugin_renderer_base {
                         $graded = $assign->submitted - $assign->need_grading;
                         $value = $graded . '&nbsp;' . ($assign->need_grading != 0 ? 
                             $OUTPUT->pix_icon('alert', get_string('key9', 'report_monitoring'), 'report_monitoring', array('class' => 'icon')) : '');
-                        $assignstotal['graded'] += $graded;
+                        $assignscalc['graded'] += $graded;
                     }
                     $cells[] = report_monitoring_table::create_cell($value);
                     
                     $table->data[] = report_monitoring_table::create_row($cells);
+                    
+                    $subval = !$assign->teamsubmission ? $assign->submitted : 0;
+                    $gradeval = !$assign->nograde ? $graded : $subval;
+                    $assignstotal['countgrades'] += ($subval + $gradeval) / 2;
                 }
                 
                 $cells = array();
                 $cells[] = report_monitoring_table::create_cell(get_string('key15', 'report_monitoring'));
-                $cells[] = report_monitoring_table::create_cell($assignstotal['participants']);
-                $cells[] = report_monitoring_table::create_cell($assignstotal['submitted']);
-                $cells[] = report_monitoring_table::create_cell($assignstotal['graded']);
+                $cells[] = report_monitoring_table::create_cell($assignscalc['participants']);
+                $cells[] = report_monitoring_table::create_cell($assignscalc['submitted']);
+                $cells[] = report_monitoring_table::create_cell($assignscalc['graded']);
                 $table->data[] = report_monitoring_table::create_row($cells);
                 
                 $statshtml .= html_writer::div(get_string('key10', 'report_monitoring') . ':', 'report_monitoring_modheader');
@@ -180,7 +192,6 @@ class report_monitoring_renderer extends plugin_renderer_base {
                     get_string('key17', 'report_monitoring'),
                     get_string('key18', 'report_monitoring'),
                 );
-                $quizestotal = array('countusers'  => 0, 'countgrades' => 0);
                 foreach ($coursedata->quiz as $modid => $quiz) {
                     $cells = array();
                     
@@ -210,9 +221,13 @@ class report_monitoring_renderer extends plugin_renderer_base {
                 $statshtml .= html_writer::table($table);
             }
             
-            return html_writer::div($statshtml, 'report_monitoring_coursestats');
+            $alltasks = $assignstotal['countusers'] + $quizestotal['countusers'];
+            $allgrades = $assignstotal['countgrades'] + $quizestotal['countgrades'];
+            $completeness = $alltasks > 0 ? $allgrades / $alltasks * 100 : 0;
             
-        } else return false;
+            return array(format_float($completeness, 2, true, true), html_writer::div($statshtml, 'report_monitoring_coursestats'));
+            
+        } else return array(0, false);
     }
 
 }

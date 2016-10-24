@@ -25,6 +25,7 @@ $strmonitoring = get_string('pluginname', 'report_monitoring');
 $PAGE->set_title("$course->shortname: $strmonitoring");
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('report');
+$PAGE->requires->css('/report/monitoring/css/styles-plugin.css');
 $PAGE->requires->js_call_amd('report_monitoring/reporttable', 'init');
 
 $event = \report_monitoring\event\report_viewed::create(array('context' => $contextcourse, 'objectid' => $categoryid));
