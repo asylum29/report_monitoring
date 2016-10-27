@@ -8,11 +8,7 @@ $courseid   = required_param('id', PARAM_INT);
 $categoryid = optional_param('categoryid', 0, PARAM_INT);
 
 $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-$contextcoursecat = null;
-if ($categoryid) {
-    $contextcoursecat = context_coursecat::instance($categoryid);
-    require_capability('report/monitoring:catview', $contextcoursecat);
-}
+$contextcoursecat = $categoryid ? context_coursecat::instance($categoryid) : null;
 
 $baseurl = new moodle_url('/report/monitoring/index.php', array('id' => $courseid));
 $PAGE->set_url($baseurl);
@@ -20,6 +16,9 @@ $PAGE->set_url($baseurl);
 require_login($course);
 $contextcourse = context_course::instance($courseid);
 require_capability('report/monitoring:view', $contextcourse);
+if ($contextcoursecat) {
+    require_capability('report/monitoring:catview', $contextcoursecat);
+}
 
 $strmonitoring = get_string('pluginname', 'report_monitoring');
 $PAGE->set_title("$course->shortname: $strmonitoring");
