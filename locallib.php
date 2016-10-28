@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once(dirname(__FILE__).'/lib.php');
 require_once($CFG->dirroot.'/mod/assign/locallib.php');
+require_once($CFG->dirroot.'/report/activity/locallib.php');
 
 function report_monitoring_get_course_data($courseid) {
     $result = new stdCLass();
@@ -80,12 +81,6 @@ function report_monitoring_get_count_course_participants($courseid) {
 function report_monitoring_get_assign_grades_data($modinfo, $activitygroup, $onlyvisible = false) {
     global $DB, $CFG;
 
-    $report_plugins = core_component::get_plugin_list('report');
-    $report_activity_installed = isset($report_plugins['activity']);
-    if ($report_activity_installed) {
-        require_once($CFG->dirroot.'/report/activity/locallib.php');
-    }
-
     $modules = $modinfo->get_instances_of('assign');
     $course = $modinfo->get_course();
 
@@ -93,8 +88,7 @@ function report_monitoring_get_assign_grades_data($modinfo, $activitygroup, $onl
 
     foreach ($modules as $module) {
 
-        $visible = $module->visible;
-        if ($report_activity_installed) $visible = report_activity_get_modvisible($module);
+        $visible = report_activity_get_modvisible($module);
         if ($onlyvisible && !$visible) continue;
         $cm = context_module::instance($module->id);
         $assign = new assign($cm, $module, $course);
@@ -147,12 +141,6 @@ function report_monitoring_get_assign_grades_data($modinfo, $activitygroup, $onl
 
 function report_monitoring_get_quiz_grades_data($modinfo, $activitygroup, $onlyvisible = false) {
     global $DB, $CFG;
-
-    $report_plugins = core_component::get_plugin_list('report');
-    $report_activity_installed = isset($report_plugins['activity']);
-    if ($report_activity_installed) {
-        require_once($CFG->dirroot.'/report/activity/locallib.php');
-    }
     
     $modules = $modinfo->get_instances_of('quiz');
 
@@ -160,8 +148,7 @@ function report_monitoring_get_quiz_grades_data($modinfo, $activitygroup, $onlyv
 
     foreach ($modules as $module) {
 
-        $visible = $module->visible;
-        if ($report_activity_installed) $visible = report_activity_get_modvisible($module);
+        $visible = report_activity_get_modvisible($module);
         if ($onlyvisible && !$visible) continue;
         $cm = context_module::instance($module->id);
         $moddata = new stdClass();
