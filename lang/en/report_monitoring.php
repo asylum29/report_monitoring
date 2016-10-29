@@ -48,3 +48,4 @@ $string['key20'] = 'No grade';
 $string['key21'] = 'Report «Course monitoring» was viewed';
 $string['key22'] = 'No courses was found';
 $string['key23'] = 'course progress: {$a}%';
+$string['key24'] = 'No questions';

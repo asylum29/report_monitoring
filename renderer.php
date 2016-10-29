@@ -222,6 +222,9 @@ class report_monitoring_renderer extends plugin_renderer_base {
                         $quizurl = "$CFG->wwwroot/mod/quiz/view.php?id=$modid";
                         $content = html_writer::link($quizurl, $content);
                     }
+                    if ($quiz->noquestions) {
+                        $content .= $OUTPUT->pix_icon('noquestions', get_string('key24', 'report_monitoring'), 'report_monitoring', array('class' => 'iconsmall'));
+                    }
                     $cells[] = report_monitoring_table::create_cell($content);
                     
                     $cells[] = report_monitoring_table::create_cell($quiz->countusers);
