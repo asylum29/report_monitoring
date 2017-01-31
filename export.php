@@ -83,13 +83,7 @@ if ($contextcoursecat) { // если категория выбрана и сущ
             foreach ($coursedata->assigns as $assign) {
                 if (!$assign->teamsubmission && !$assign->nograde) {
                     $total += $assign->participants;
-                }
-
-                if (!$assign->teamsubmission && !$assign->nograde) {
                     $submitted += $assign->submitted;
-                }
-
-                if (!$assign->teamsubmission && !$assign->nograde) {
                     $graded += $assign->submitted - $assign->need_grading;
                 }
             }
