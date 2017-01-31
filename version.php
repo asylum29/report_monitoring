@@ -18,13 +18,13 @@
  * monitoring report
  *
  * @package    report_monitoring
- * @copyright  2016 Aleksandr Raetskiy <ksenon3@mail.ru>
+ * @copyright  2017 Aleksandr Raetskiy <ksenon3@mail.ru>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
  
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016102921;
+$plugin->version   = 2017013123;
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->requires  = 2016052300;
 $plugin->component = 'report_monitoring';

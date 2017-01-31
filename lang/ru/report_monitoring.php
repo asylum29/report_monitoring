@@ -18,7 +18,7 @@
  * monitoring report
  *
  * @package    report_monitoring
- * @copyright  2016 Aleksandr Raetskiy <ksenon3@mail.ru>
+ * @copyright  2017 Aleksandr Raetskiy <ksenon3@mail.ru>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -49,3 +49,4 @@ $string['key21'] = 'Отчет «Мониторинг курсов» просм�
 $string['key22'] = 'Курсы не найдены';
 $string['key23'] = 'завершенность курса: {$a}%';
 $string['key24'] = 'Без вопросов';
+$string['key25'] = 'Экспорт в Excel';

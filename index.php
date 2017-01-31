@@ -18,7 +18,7 @@
  * monitoring report
  *
  * @package    report_monitoring
- * @copyright  2016 Aleksandr Raetskiy <ksenon3@mail.ru>
+ * @copyright  2017 Aleksandr Raetskiy <ksenon3@mail.ru>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -60,18 +60,25 @@ echo $output->container_start('', 'report_monitoring');
 
 $categories = coursecat::make_categories_list('report/monitoring:catview');
 if (count($categories) > 0) { // если есть категории, которые можно выбрать
-    echo $output->container(get_string('categories') . ':', 'report_monitoring_coursecat_select');
-    echo $output->single_select($baseurl, 'categoryid', $categories, $categoryid);   
-}
-
-if ($contextcoursecat) { // если категория выбрана, существует и есть право ее просмотра
-    $coursesdata = array();
-    $courses = coursecat::get($categoryid)->get_courses(array('recursive' => true));
-    foreach ($courses as $course) {
-        if (!$course->visible) continue;
-        $coursesdata[] = report_monitoring_get_course_data($course->id);
+    if ($contextcoursecat) { // если категория выбрана, существует и есть право ее просмотра
+        $params = array('id' => $courseid, 'categoryid' => $categoryid);
+        $exporturl = new moodle_url($CFG->wwwroot . '/report/monitoring/export.php', $params);
+        echo $output->single_button($exporturl, get_string('key25', 'report_monitoring'), 'get');
     }
-    echo $output->display_report($coursesdata);
+
+    $label = $output->container(get_string('categories') . ':', 'report_monitoring_coursecat_label');
+    $select = $output->single_select($baseurl, 'categoryid', $categories, $categoryid);
+    echo $output->container($label . $select, 'report_monitoring_coursecat_select');
+
+    if ($contextcoursecat) { // если категория выбрана, существует и есть право ее просмотра
+        $coursesdata = array();
+        $courses = coursecat::get($categoryid)->get_courses(array('recursive' => true));
+        foreach ($courses as $course) {
+            if (!$course->visible) continue;
+            $coursesdata[] = report_monitoring_get_course_data($course->id);
+        }
+        echo $output->display_report($coursesdata);
+    }
 }
 
 echo $output->container_end();

@@ -1,5 +1,8 @@
 #report_monitoring .report_monitoring_coursecat_select {
     text-align: center;
+}
+
+#report_monitoring .report_monitoring_coursecat_label {
     margin-bottom: 5px;
 }
 
