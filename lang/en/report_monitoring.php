@@ -25,6 +25,7 @@
 $string['pluginname'] = 'Course monitoring';
 $string['monitoring:view'] = 'View the report «Course monitoring» ';
 $string['monitoring:catview'] = 'View the category report «Course monitoring»';
+$string['monitoring:catadmin'] = 'Leave comments for courses of the «Course monitoring» report';
 $string['key1'] = 'Course';
 $string['key2'] = 'Teacher (last access)';
 $string['key3'] = 'Founded errors';
@@ -50,3 +51,6 @@ $string['key22'] = 'No courses was found';
 $string['key23'] = 'course progress: {$a}%';
 $string['key24'] = 'No questions';
 $string['key25'] = 'Export to Excel';
+$string['key26'] = 'Comment editing';
+$string['key27'] = 'Course readiness';
+$string['key28'] = 'The comment was left';

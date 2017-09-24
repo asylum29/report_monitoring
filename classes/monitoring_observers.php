@@ -18,33 +18,19 @@
  * monitoring report
  *
  * @package    report_monitoring
- * @copyright  2016 Aleksandr Raetskiy <ksenon3@mail.ru>
+ * @copyright  2017 Aleksandr Raetskiy <ksenon3@mail.ru>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace report_monitoring;
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = array(
+class monitoring_observers {
 
-    'report/monitoring:view' => array(
-        'captype'      => 'read',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes'   => array(
-            'teacher'        => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager'        => CAP_ALLOW
-        )
-    ),
+    public static function course_deleted($event) {
+        global $DB;
 
-    'report/monitoring:catview' => array(
-        'riskbitmask'  => RISK_PERSONAL,
-        'captype'      => 'read',
-        'contextlevel' => CONTEXT_COURSECAT,
-    ),
+        $DB->delete_records('report_monitoring_results', array('courseid' => $event->objectid));
+    }
 
-    'report/monitoring:catadmin' => array(
-        'captype'      => 'write',
-        'contextlevel' => CONTEXT_COURSECAT,
-    ),
-	
-);
+}

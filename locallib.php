@@ -28,7 +28,7 @@ require_once(dirname(__FILE__).'/lib.php');
 require_once($CFG->dirroot.'/report/activity/locallib.php');
 
 function report_monitoring_get_course_data($courseid) {
-    $result = new stdCLass();
+    $result = new stdClass();
     
     $modinfo = get_fast_modinfo($courseid);
     $context = context_course::instance($courseid);
@@ -39,6 +39,7 @@ function report_monitoring_get_course_data($courseid) {
     $result->visible = has_capability('moodle/course:view', $context);
     $result->files = report_monitoring_get_count_course_files($modinfo, true);
     $result->participants = report_monitoring_get_count_course_participants($courseid);
+    $result->monitoring = report_monitoring_get_comment($courseid);
     
     $result->graders = array();
     $graders = report_activity_get_course_graders($courseid);
@@ -79,4 +80,30 @@ function report_monitoring_get_count_course_files($modinfo, $onlyvisible = false
     }
     
     return $result;
+}
+
+function report_monitoring_set_comment($courseid, $comment, $ready) {
+    global $DB;
+
+    $new = array(
+        'courseid'     => $courseid,
+        'comment'      => trim($comment),
+        'ready'        => $ready ? 1 : 0,
+        'timemodified' => time()
+    );
+    
+    $count = $DB->count_records('report_monitoring_results', array('courseid' => $courseid));
+    if ($count > 0) {
+        $DB->execute('UPDATE {report_monitoring_results}
+                         SET comment = :comment, ready = :ready, timemodified = :timemodified
+                       WHERE courseid = :courseid', $new);
+    } else {
+        $DB->insert_record('report_monitoring_results', $new);
+    }
+}
+
+function report_monitoring_get_comment($courseid) {
+    global $DB;
+
+    return $DB->get_record('report_monitoring_results', array('courseid' => $courseid));
 }

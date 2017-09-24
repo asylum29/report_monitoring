@@ -26,9 +26,10 @@ defined('MOODLE_INTERNAL') || die();
 
 class report_monitoring_renderer extends plugin_renderer_base {
 
-    public function display_report($coursesdata) {
-        global $CFG, $OUTPUT;
-        
+    public function display_report($courseid, $coursesdata, $admin = false) {
+        global $CFG, $OUTPUT, $SESSION;
+
+        $lastedit = isset($SESSION->report_monitoring_last_course) ? $SESSION->report_monitoring_last_course : 0;
         if (count($coursesdata) > 0) {
             $table = report_monitoring_table::create_table('table report_monitoring_table');
             $table->head = array(
@@ -73,33 +74,52 @@ class report_monitoring_renderer extends plugin_renderer_base {
                     }
                 }
                 
-                $notices = array();
-                if (count($coursedata->graders) == 0) {
-                    $notices[] = get_string('key4', 'report_monitoring');
-                }
-                if (count($coursedata->graders) == $coursedata->participants) {
-                    $notices[] = get_string('key5', 'report_monitoring');
-                }
-                if (count($coursedata->assigns) == 0 && count($coursedata->quiz) == 0) {
-                    $notices[] = get_string('key6', 'report_monitoring');
-                }
-                if ($coursedata->files == 0) {
-                    $notices[] = get_string('key7', 'report_monitoring');
-                }
-                if ($need_grading > 0) {
-                    $notices[] = get_string('key9', 'report_monitoring') . '&nbsp;(' . $need_grading . ')';
-                }
-                $class = count($notices) > 0 ? 'report_monitoring_red' : 'report_monitoring_green'; // проверка наличия замечаний по курсу
-                if (count($notices) == 0) {
-                    $notices[] = get_string('key8', 'report_monitoring');
+                $notices = array();;
+                if ($result = $coursedata->monitoring) {
+                    $notices[] = $result->comment === '' ? get_string('key8', 'report_monitoring') : $result->comment;
+                    $class = $result->ready == 0 ? 'report_monitoring_red' : 'report_monitoring_green'; // проверка наличия замечаний по курсу
+                } else {
+                    if (count($coursedata->graders) == 0) {
+                        $notices[] = get_string('key4', 'report_monitoring');
+                    }
+                    if (count($coursedata->graders) == $coursedata->participants) {
+                        $notices[] = get_string('key5', 'report_monitoring');
+                    }
+                    if (count($coursedata->assigns) == 0 && count($coursedata->quiz) == 0) {
+                        $notices[] = get_string('key6', 'report_monitoring');
+                    }
+                    if ($coursedata->files == 0) {
+                        $notices[] = get_string('key7', 'report_monitoring');
+                    }
+                    if ($need_grading > 0) {
+                        $notices[] = get_string('key9', 'report_monitoring') . '&nbsp;(' . $need_grading . ')';
+                    }
+                    $class = count($notices) > 0 ? 'report_monitoring_red' : 'report_monitoring_green'; // проверка наличия замечаний по курсу
+                    if (count($notices) == 0) {
+                        $notices[] = get_string('key8', 'report_monitoring');
+                    }
                 }
                 $notices[] = html_writer::start_tag('b') . get_string('key23', 'report_monitoring', $completeness) . html_writer::end_tag('b');
+                if ($admin) { // возможность редактирования замечаний есть только у роли с таким правом
+                    $params = array('id' => $courseid, 'courseid' => $coursedata->id);
+                    $courseurl = new moodle_url("$CFG->wwwroot/report/monitoring/index.php", $params);
+                    $content = mb_strtolower(get_string('key26', 'report_monitoring'), 'UTF-8');
+                    $content = html_writer::link($courseurl, $content);
+                    if (!$coursedata->monitoring) {
+                        $content .= '&nbsp;' . $OUTPUT->pix_icon('noview', '', 'report_monitoring', array('class' => 'iconsmall'));
+                    }
+                    $notices[] = $content;
+                }
                 $cells[] = report_monitoring_table::create_cell(html_writer::alist($notices));
                 
                 $content = $coursestats ? html_writer::div('', 'report_monitoring_showmore') : '';
                 $cells[] = report_monitoring_table::create_cell($content);
                 
+                if ($coursedata->id == $lastedit) { // выделение последнего просмотренного курса
+                    $class = 'report_monitoring_orange';
+                }
                 $row = report_monitoring_table::create_row($cells, $class);
+                $row->id = 'report_monitoring_' . $coursedata->id;
                 
                 $table->data[] = $row;
                 

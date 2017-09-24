@@ -24,62 +24,108 @@
 
 require_once('../../config.php');
 require_once($CFG->dirroot.'/report/monitoring/locallib.php');
+require_once($CFG->dirroot.'/report/monitoring/forms.php');
 require_once($CFG->libdir.'/coursecatlib.php');
 
-$courseid   = required_param('id', PARAM_INT);
+$id         = required_param('id', PARAM_INT);
 $categoryid = optional_param('categoryid', 0, PARAM_INT);
+$courseid   = optional_param('courseid', 0, PARAM_INT);
 
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
+if ($courseid > 0) {
+    $categoryid = $DB->get_field('course', 'category', array('id' => $courseid), MUST_EXIST);
+}
 $contextcoursecat = $categoryid ? context_coursecat::instance($categoryid) : null;
-
-$baseurl = new moodle_url('/report/monitoring/index.php', array('id' => $courseid));
+$baseurl = new moodle_url('/report/monitoring/index.php', array('id' => $id));
 $PAGE->set_url($baseurl);
 
 require_login($course);
-$contextcourse = context_course::instance($courseid);
+$contextcourse = context_course::instance($id);
 require_capability('report/monitoring:view', $contextcourse);
 if ($contextcoursecat) {
     require_capability('report/monitoring:catview', $contextcoursecat);
+}
+if ($courseid > 0) {
+    require_capability('report/monitoring:catadmin', $contextcoursecat);
 }
 
 $strmonitoring = get_string('pluginname', 'report_monitoring');
 $PAGE->set_title("$course->shortname: $strmonitoring");
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('report');
-$PAGE->requires->css('/report/monitoring/css/styles-plugin.css');
-$PAGE->requires->js_call_amd('report_monitoring/reporttable', 'init');
 
-$event = \report_monitoring\event\report_viewed::create(array('context' => $contextcourse, 'objectid' => $categoryid));
-$event->trigger();
+if ($courseid > 0) {
+    
+    $baseurl->param('courseid', $courseid);
+    $commentheader = get_string('key26', 'report_monitoring');
+    $PAGE->navbar->add($commentheader, $baseurl);
 
-$output = $PAGE->get_renderer('report_monitoring');
-
-echo $output->header();
-echo $output->heading($strmonitoring);
-echo $output->container_start('', 'report_monitoring');
-
-$categories = coursecat::make_categories_list('report/monitoring:catview');
-if (count($categories) > 0) { // если есть категории, которые можно выбрать
-    if ($contextcoursecat) { // если категория выбрана, существует и есть право ее просмотра
-        $params = array('id' => $courseid, 'categoryid' => $categoryid);
-        $exporturl = new moodle_url($CFG->wwwroot . '/report/monitoring/export.php', $params);
-        echo $output->single_button($exporturl, get_string('key25', 'report_monitoring'), 'get');
+    $params = array('id' => $id, 'categoryid' => $categoryid);
+    $redirecturl = new moodle_url('/report/monitoring/index.php', $params, 'report_monitoring_' . $courseid);
+    $coursedata = report_monitoring_get_course_data($courseid);
+    $formdata = array('id' => $id, 'categoryid' => $categoryid, 'coursedata' => $coursedata);
+    $commentform = new report_moniroting_comment_form(null, $formdata);
+    if ($commentform->is_cancelled()) {
+        redirect($redirecturl);
+    } else if ($data = $commentform->get_data()) {
+        report_monitoring_set_comment($courseid, $data->comment, $data->ready);
+        $SESSION->report_monitoring_last_course = $courseid;
+        $event = \report_monitoring\event\comment_created::create(array('context' => $contextcourse, 'objectid' => $courseid));
+        $event->trigger();
+        redirect($redirecturl);
     }
 
-    $label = $output->container(get_string('categories') . ':', 'report_monitoring_coursecat_label');
-    $select = $output->single_select($baseurl, 'categoryid', $categories, $categoryid);
-    echo $output->container($label . $select, 'report_monitoring_coursecat_select');
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading($commentheader);
 
-    if ($contextcoursecat) { // если категория выбрана, существует и есть право ее просмотра
-        $coursesdata = array();
-        $courses = coursecat::get($categoryid)->get_courses(array('recursive' => true));
-        foreach ($courses as $course) {
-            if (!$course->visible) continue;
-            $coursesdata[] = report_monitoring_get_course_data($course->id);
+    if ($result = $coursedata->monitoring) {
+        $commentform->set_data(array(
+            'comment' => $result->comment,
+            'ready'   => $result->ready,
+        ));
+    }
+    $commentform->display();
+
+    echo $OUTPUT->footer();
+    
+} else {
+    
+    $PAGE->requires->css('/report/monitoring/css/styles-plugin.css');
+    $PAGE->requires->js_call_amd('report_monitoring/reporttable', 'init');
+
+    $event = \report_monitoring\event\report_viewed::create(array('context' => $contextcourse, 'objectid' => $categoryid));
+    $event->trigger();
+
+    $output = $PAGE->get_renderer('report_monitoring');
+
+    echo $output->header();
+    echo $output->heading($strmonitoring);
+    echo $output->container_start('', 'report_monitoring');
+
+    $categories = coursecat::make_categories_list('report/monitoring:catview');
+    if (count($categories) > 0) { // если есть категории, которые можно выбрать
+        if ($contextcoursecat) { // если категория выбрана, существует и есть право ее просмотра
+            $params = array('id' => $id, 'categoryid' => $categoryid);
+            $exporturl = new moodle_url($CFG->wwwroot . '/report/monitoring/export.php', $params);
+            echo $output->single_button($exporturl, get_string('key25', 'report_monitoring'), 'get');
         }
-        echo $output->display_report($coursesdata);
-    }
-}
 
-echo $output->container_end();
-echo $output->footer();
+        $label = $output->container(get_string('categories') . ':', 'report_monitoring_coursecat_label');
+        $select = $output->single_select($baseurl, 'categoryid', $categories, $categoryid);
+        echo $output->container($label . $select, 'report_monitoring_coursecat_select');
+
+        if ($contextcoursecat) { // если категория выбрана, существует и есть право ее просмотра
+            $coursesdata = array();
+            $courses = coursecat::get($categoryid)->get_courses(array('recursive' => true));
+            foreach ($courses as $course) {
+                if (!$course->visible) continue;
+                $coursesdata[] = report_monitoring_get_course_data($course->id);
+            }
+            echo $output->display_report($id, $coursesdata, has_capability('report/monitoring:catadmin', $contextcoursecat));
+        }
+    }
+
+    echo $output->container_end();
+    echo $output->footer();
+    
+}

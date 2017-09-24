@@ -24,4 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$observers = array();
+$observers = array(
+    
+    array(
+        'eventname' => '\core\event\course_deleted',
+        'callback'  => '\report_monitoring\monitoring_observers::course_deleted',
+    ),
+    
+);

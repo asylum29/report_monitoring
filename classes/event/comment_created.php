@@ -22,29 +22,27 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace report_monitoring\event;
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = array(
+class comment_created extends \core\event\base {
 
-    'report/monitoring:view' => array(
-        'captype'      => 'read',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes'   => array(
-            'teacher'        => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager'        => CAP_ALLOW
-        )
-    ),
+    protected function init() {
+        $this->data['crud'] = 'u';
+        $this->data['edulevel'] = self::LEVEL_TEACHING;
+        $this->data['objecttable'] = 'report_monitoring_results';
+    }
 
-    'report/monitoring:catview' => array(
-        'riskbitmask'  => RISK_PERSONAL,
-        'captype'      => 'read',
-        'contextlevel' => CONTEXT_COURSECAT,
-    ),
+    public static function get_name() {
+        return get_string('key28', 'report_monitoring');
+    }
 
-    'report/monitoring:catadmin' => array(
-        'captype'      => 'write',
-        'contextlevel' => CONTEXT_COURSECAT,
-    ),
-	
-);
+    public function get_description() {
+        return "The user with id '{$this->userid}' has left the comment for the course with id '{$this->data['objectid']}'.";
+    }
+
+    public function get_url() {
+        return new \moodle_url('/report/monitoring/index.php', array('id' => $this->courseid, 'courseid' => $this->data['objectid']));
+    }
+
+}

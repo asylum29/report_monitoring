@@ -57,7 +57,8 @@ if ($contextcoursecat) { // если категория выбрана и сущ
     $myxls->write_string(0, 4, get_string('key14', 'report_monitoring'));
     $myxls->write_string(0, 5, get_string('key17', 'report_monitoring'));
     $myxls->write_string(0, 6, get_string('key18', 'report_monitoring'));
-    $myxls->write_string(0, 7, get_string('key3', 'report_monitoring'));
+    $myxls->write_string(0, 7, get_string('key27', 'report_monitoring'));
+    $myxls->write_string(0, 8, get_string('key3', 'report_monitoring'));
 
     // Формирование данных таблицы
     $index = 1;
@@ -104,27 +105,33 @@ if ($contextcoursecat) { // если категория выбрана и сущ
         $myxls->write_number($index, 6, $graded);
 
         $notices = array();
-        if (count($coursedata->graders) == 0) {
-            $notices[] = get_string('key4', 'report_monitoring');
+        if ($result = $coursedata->monitoring) {
+            $notices[] = $result->comment === '' ? get_string('key8', 'report_monitoring') : $result->comment;
+            $myxls->write_string($index, 7, $result->ready ? '+' : '');
+        } else {
+            if (count($coursedata->graders) == 0) {
+                $notices[] = get_string('key4', 'report_monitoring');
+            }
+            if (count($coursedata->graders) == $coursedata->participants) {
+                $notices[] = get_string('key5', 'report_monitoring');
+            }
+            if (count($coursedata->assigns) == 0 && count($coursedata->quiz) == 0) {
+                $notices[] = get_string('key6', 'report_monitoring');
+            }
+            if ($coursedata->files == 0) {
+                $notices[] = get_string('key7', 'report_monitoring');
+            }
+            if ($need_grading > 0) {
+                $notices[] = get_string('key9', 'report_monitoring') . ' (' . $need_grading . ')';
+            }
+            if (count($notices) == 0) {
+                $notices[] = get_string('key8', 'report_monitoring');
+                $myxls->write_string($index, 7, '+');
+            }            
         }
-        if (count($coursedata->graders) == $coursedata->participants) {
-            $notices[] = get_string('key5', 'report_monitoring');
-        }
-        if (count($coursedata->assigns) == 0 && count($coursedata->quiz) == 0) {
-            $notices[] = get_string('key6', 'report_monitoring');
-        }
-        if ($coursedata->files == 0) {
-            $notices[] = get_string('key7', 'report_monitoring');
-        }
-        if ($need_grading > 0) {
-            $notices[] = get_string('key9', 'report_monitoring') . ' (' . $need_grading . ')';
-        }
-        if (count($notices) == 0) {
-            $notices[] = get_string('key8', 'report_monitoring');
-        }
-        $myxls->write_string($index, 7, implode('; ', $notices));
+        $myxls->write_string($index, 8, implode('; ', $notices));
 
-        $myxls->write_string($index, 8, "$CFG->wwwroot/course/view.php?id=$coursedata->id");
+        $myxls->write_string($index, 9, "$CFG->wwwroot/course/view.php?id=$coursedata->id");
 
         $index++;
     }

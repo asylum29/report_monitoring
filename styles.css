@@ -19,6 +19,14 @@
         width: 40%;
     }
 
+    #report_monitoring .report_monitoring_table > thead th.header.c1 {
+        width: 30%;
+    }
+
+    #report_monitoring .report_monitoring_table > thead th.header.c2 {
+        width: 30%;
+    }
+
     #report_monitoring .report_monitoring_table > thead th.header.lastcol {
         width: 25px;
     }
@@ -29,6 +37,10 @@
 
 #report_monitoring .report_monitoring_green {
     background-color: rgb(230, 240, 230);
+}
+
+#report_monitoring .report_monitoring_orange {
+    background-color: rgb(240, 200, 140);
 }
 
 #report_monitoring .report_monitoring_coursename {
