@@ -57,6 +57,20 @@ function report_monitoring_get_course_data($courseid) {
     return $result;
 }
 
+function report_monitoring_get_course_comment($courseid) {
+    $result = new stdClass();
+
+    $course = get_course($courseid);
+    $context = context_course::instance($courseid);
+
+    $result->id = $courseid;
+    $result->fullname = $course->fullname;
+    $result->visible = has_capability('moodle/course:view', $context);
+    $result->monitoring = report_monitoring_get_comment($courseid);
+
+    return $result;
+}
+
 function report_monitoring_get_count_course_participants($courseid) {
     $context = context_course::instance($courseid);
     return count_enrolled_users($context);

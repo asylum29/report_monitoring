@@ -54,3 +54,6 @@ $string['key25'] = 'Export to Excel';
 $string['key26'] = 'Comment editing';
 $string['key27'] = 'Course readiness';
 $string['key28'] = 'The comment was left';
+$string['key29'] = 'Show details';
+$string['key30'] = 'Hide details';
+$string['key31'] = 'was not viewed by the administrator';

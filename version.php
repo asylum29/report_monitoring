@@ -24,7 +24,7 @@
  
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017092413;
+$plugin->version   = 2017101523;
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->requires  = 2016052300;
 $plugin->component = 'report_monitoring';

@@ -104,10 +104,22 @@ if ($courseid > 0) {
 
     $categories = coursecat::make_categories_list('report/monitoring:catview');
     if (count($categories) > 0) { // если есть категории, которые можно выбрать
+        $details = isset($SESSION->report_monitoring_details) ? $SESSION->report_monitoring_details : 1;
+
         if ($contextcoursecat) { // если категория выбрана, существует и есть право ее просмотра
             $params = array('id' => $id, 'categoryid' => $categoryid);
             $exporturl = new moodle_url($CFG->wwwroot . '/report/monitoring/export.php', $params);
             echo $output->single_button($exporturl, get_string('key25', 'report_monitoring'), 'get');
+            
+            if ($details == 1) {
+                $params['enable'] = 0;
+                $label = get_string('key30', 'report_monitoring');
+            } else {
+                $params['enable'] = 1;
+                $label = get_string('key29', 'report_monitoring');
+            }
+            $moreurl = new moodle_url($CFG->wwwroot . '/report/monitoring/details.php', $params);
+            echo $output->single_button($moreurl, $label, 'post');
         }
 
         $label = $output->container(get_string('categories') . ':', 'report_monitoring_coursecat_label');
@@ -117,11 +129,19 @@ if ($courseid > 0) {
         if ($contextcoursecat) { // если категория выбрана, существует и есть право ее просмотра
             $coursesdata = array();
             $courses = coursecat::get($categoryid)->get_courses(array('recursive' => true));
-            foreach ($courses as $course) {
-                if (!$course->visible) continue;
-                $coursesdata[] = report_monitoring_get_course_data($course->id);
+            if ($details == 1) {
+                foreach ($courses as $course) {
+                    if (!$course->visible) continue;
+                    $coursesdata[] = report_monitoring_get_course_data($course->id);
+                }
+                echo $output->display_report($id, $coursesdata, has_capability('report/monitoring:catadmin', $contextcoursecat));
+            } else {
+                foreach ($courses as $course) {
+                    if (!$course->visible) continue;
+                    $coursesdata[] = report_monitoring_get_course_comment($course->id);
+                }
+                echo $output->display_simple_report($id, $coursesdata, has_capability('report/monitoring:catadmin', $contextcoursecat));
             }
-            echo $output->display_report($id, $coursesdata, has_capability('report/monitoring:catadmin', $contextcoursecat));
         }
     }
 

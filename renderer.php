@@ -275,6 +275,68 @@ class report_monitoring_renderer extends plugin_renderer_base {
         } else return array(0, false);
     }
 
+    public function display_simple_report($courseid, $coursesdata, $admin = false) {
+        global $CFG, $OUTPUT, $SESSION;
+
+        $lastedit = isset($SESSION->report_monitoring_last_course) ? $SESSION->report_monitoring_last_course : 0;
+        if (count($coursesdata) > 0) {
+            $table = report_monitoring_table::create_table('table report_monitoring_simple_table');
+            $table->head = array(
+                get_string('key1', 'report_monitoring'),
+                get_string('key3', 'report_monitoring'),
+            );
+            foreach ($coursesdata as $coursedata) {
+
+                $cells = array();
+
+                $content = $OUTPUT->pix_icon('i/course', null, '', array('class' => 'icon')) . $coursedata->fullname;
+                if ($coursedata->visible) {
+                    $courseurl = "$CFG->wwwroot/course/view.php?id=$coursedata->id";
+                    $content = html_writer::link($courseurl, $content);
+                }
+                $content = $OUTPUT->heading($content, 4, 'report_monitoring_coursename');
+                $cells[] = report_monitoring_table::create_cell($content);
+
+                $notices = array();
+                if ($result = $coursedata->monitoring) {
+                    $notices[] = $result->comment === '' ? get_string('key8', 'report_monitoring') : $result->comment;
+                    $class = $result->ready == 0 ? 'report_monitoring_red' : 'report_monitoring_green'; // проверка наличия замечаний по курсу
+                } else {
+                    $notices[] = get_string('key31', 'report_monitoring');
+                    $class = 'report_monitoring_gray'; // курс еще не комментировался администратором
+                }
+
+                if ($admin) { // возможность редактирования замечаний есть только у роли с таким правом
+                    $params = array('id' => $courseid, 'courseid' => $coursedata->id);
+                    $courseurl = new moodle_url("$CFG->wwwroot/report/monitoring/index.php", $params);
+                    $content = mb_strtolower(get_string('key26', 'report_monitoring'), 'UTF-8');
+                    $content = html_writer::link($courseurl, $content);
+                    if (!$coursedata->monitoring) {
+                        $content .= '&nbsp;' . $OUTPUT->pix_icon('noview', '', 'report_monitoring', array('class' => 'iconsmall'));
+                    }
+                    $notices[] = $content;
+                }
+                $cells[] = report_monitoring_table::create_cell(html_writer::alist($notices));
+
+                if ($coursedata->id == $lastedit) { // выделение последнего просмотренного курса
+                    $class = 'report_monitoring_orange';
+                }
+                $row = report_monitoring_table::create_row($cells, $class);
+                $row->id = 'report_monitoring_' . $coursedata->id;
+
+                $table->data[] = $row;
+
+            }
+
+            return html_writer::table($table);
+
+        } else {
+
+            return $OUTPUT->heading(get_string('key22', 'report_monitoring'), 3);
+
+        }
+    }
+
 }
 
 class report_monitoring_table {

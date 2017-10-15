@@ -6,11 +6,15 @@
     margin-bottom: 5px;
 }
 
-#report_monitoring .report_monitoring_table {
+#report_monitoring .report_monitoring_table,
+#report_monitoring .report_monitoring_simple_table {
     margin-top: 5px;
 }
 
-    #report_monitoring .report_monitoring_table > thead th.header, #report_monitoring div.report_monitoring_coursestats th.header, #report_monitoring div.report_monitoring_coursestats tr.lastrow > td.cell {
+    #report_monitoring .report_monitoring_table > thead th.header,
+    #report_monitoring div.report_monitoring_coursestats th.header,
+    #report_monitoring div.report_monitoring_coursestats tr.lastrow > td.cell,
+    #report_monitoring .report_monitoring_simple_table > thead th.header {
         font-weight: bold;
         background-color: lightgray;
     }
@@ -31,6 +35,10 @@
         width: 25px;
     }
 
+    #report_monitoring .report_monitoring_simple_table > thead th.header.lastcol {
+        width: 30%;
+    }
+
 #report_monitoring .report_monitoring_red {
     background-color: rgb(240, 230, 230);
 }
@@ -41,6 +49,10 @@
 
 #report_monitoring .report_monitoring_orange {
     background-color: rgb(240, 200, 140);
+}
+
+#report_monitoring .report_monitoring_gray {
+    background-color: rgb(240, 240, 240);
 }
 
 #report_monitoring .report_monitoring_coursename {
